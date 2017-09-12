@@ -2,5 +2,5 @@ node_modules
 dev-server
 .serverless
 .env
-key.json
 test/.scratch
+.DS_Store

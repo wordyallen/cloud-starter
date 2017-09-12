@@ -3,7 +3,7 @@ import {generate} from 'shortid'
 const { DocumentClient } = DynamoDB
 const { ARTICLES_TABLE, COMMENTS_TABLE, NODE_ENV } = process.env
 import {writeFileSync, readFileSync} from 'fs'
-import {promisify} from 'util'
+
 
 config.setPromisesDependency(Promise)
 
@@ -38,110 +38,6 @@ export const querySingleArticle = async (context, { id }) =>{
 }
 
 
-export const limitArticles = async (_, {limit})=>{
-
-  let keyFromTmp
-  try {keyFromTmp = JSON.parse(readFileSync('./key.json','utf8'))}
-  catch (e) {}
-
-
-  if(!keyFromTmp){
-
-    const {Items:articles, LastEvaluatedKey} = await ArticleDB
-      .scan({Limit:limit}).promise()
-
-    writeFileSync('./key.json', JSON.stringify(LastEvaluatedKey), 'utf8' )
-
-    return articles
-
-
-  } else{
-    
-    const {Items:articles, LastEvaluatedKey} = await ArticleDB
-      .scan({Limit:limit, ExclusiveStartKey: keyFromTmp})
-      .promise()
-
-    writeFileSync('./key.json', JSON.stringify(LastEvaluatedKey), 'utf8' )
-
-    return articles
-
-  }
-
-}
-  // if(!readFileSync('./key.json','utf8')){
-  //   console.log('---no key in tmp')
-  //
-  //   const {Items:articles, LastEvaluatedKey} = await ArticleDB.scan({Limit:limit}).promise()
-  //   writeFileSync('./key.json', JSON.stringify(LastEvaluatedKey), 'utf8' )
-  //
-  //   return articles
-  //
-  // } else{
-  //
-  //   console.log('---key IS in tmp!')
-  //
-  //   const keyFromTmp = JSON.parse(readFileSync('./key.json','utf8'))
-  //   const {Items:articles, LastEvaluatedKey} = await ArticleDB.scan({
-  //     Limit:limit,
-  //     ExclusiveStartKey: keyFromTmp
-  //   }).promise()
-  //
-  //   return articles
-  // }
-
-
-  // if(keyFromTmp && keyFromTmp.first){
-  //
-  //   const {Items:articles, LastEvaluatedKey} = await ArticleDB.scan({Limit:limit}).promise()
-  //   writeFileSync('./key.json', JSON.stringify({next:LastEvaluatedKey}), 'utf8' )
-  //
-  //
-  // }else if (keyFromTmp && keyFromTmp.next) {
-  //
-  //   const keyFromTmp = JSON.parse(readFileSync('./key.json', 'utf8' ))
-  //   const {Items:articles, LastEvaluatedKey} = await ArticleDB.scan({
-  //     Limit:limit
-  //     ExclusiveStartKey: keyFromTmp.next
-  //   }).promise()
-  // } else {
-  //
-  // }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // const {Items:articles, LastEvaluatedKey} =  await ArticleDB.scan({
-  //           Limit: limit,
-  //         }).promise()
-  //
-  // if(LastEvaluatedKey){
-  //   return article
-  // } else{
-  //   const {Items:articles, LastEvaluatedKey} =  await ArticleDB.scan({
-  //     Limit: limit,
-  //     ExclusiveStartKey: LastEvaluatedKey,
-  //   }).promise()
-  //
-  //   return articles
-  // }
-  //
-  //
-  // console.log(LastEvaluatedKey)
-  // return articles
-
-  // return articles
-
-
 export const queryAllArticles = async (_, {hours, author_id}) =>{
 
   const {Items:articles, LastEvaluatedKey} = hours && author_id
@@ -170,6 +66,34 @@ export const queryAllArticles = async (_, {hours, author_id}) =>{
 
 
   return articles
+
+}
+
+export const limitArticles = async (_, {limit})=>{
+
+  let keyFromTmp
+  try { keyFromTmp = JSON.parse(readFileSync('/tmp/key.json','utf8'))}
+  catch (e) {}
+
+  if(!keyFromTmp){
+
+    const {Items:articles, LastEvaluatedKey} = await ArticleDB
+      .scan({Limit:limit}).promise()
+
+    writeFileSync('/tmp/key.json', JSON.stringify(LastEvaluatedKey), 'utf8' )
+
+    return articles
+
+  } else{
+
+    const {Items:articles, LastEvaluatedKey} = await ArticleDB
+      .scan({Limit:limit, ExclusiveStartKey: keyFromTmp})
+      .promise()
+
+    writeFileSync('/tmp/key.json', JSON.stringify(LastEvaluatedKey), 'utf8' )
+
+    return articles
+  }
 
 }
 

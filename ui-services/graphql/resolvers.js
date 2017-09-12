@@ -69,31 +69,38 @@ export const queryAllArticles = async (_, {hours, author_id}) =>{
 
 }
 
+
+
 export const limitArticles = async (_, {limit})=>{
 
-  let keyFromTmp
-  try { keyFromTmp = JSON.parse(readFileSync('/tmp/key.json','utf8'))}
+  let data
+  try { data = JSON.parse(readFileSync('/tmp/key.json','utf8'))}
   catch (e) {}
 
-  if(!keyFromTmp){
+  if(!data){
 
     const {Items:articles, LastEvaluatedKey} = await ArticleDB
       .scan({Limit:limit}).promise()
 
-    writeFileSync('/tmp/key.json', JSON.stringify(LastEvaluatedKey), 'utf8' )
+    writeFileSync('/tmp/key.json', JSON.stringify({key:LastEvaluatedKey}))
 
     return articles
 
-  } else{
+  } else if(Object.keys(data).length !== 0){
 
     const {Items:articles, LastEvaluatedKey} = await ArticleDB
-      .scan({Limit:limit, ExclusiveStartKey: keyFromTmp})
+      .scan({Limit:limit, ExclusiveStartKey: data.key})
       .promise()
 
-    writeFileSync('/tmp/key.json', JSON.stringify(LastEvaluatedKey), 'utf8' )
+    writeFileSync('/tmp/key.json', JSON.stringify({key:LastEvaluatedKey}))
 
     return articles
   }
+  else{
+    writeFileSync('/tmp/key.json', '' )
+    return []
+  }
+
 
 }
 

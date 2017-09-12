@@ -1,1 +1,1 @@
-# A Serverless Starter kit for IoT and GraphQL
+# A Serverless Starter Kit for IoT and GraphQL

@@ -1,0 +1,125 @@
+service: cloud-starter
+
+frameworkVersion: ">=1.8.0 <2.0.0"
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+  environment:
+    SLS_STAGE: ${opt:stage, self:provider.stage}
+    ARTICLES_TABLE: dev-cloud-starter-articles
+    COMMENTS_TABLE: dev-cloud-starter-comments
+  iamRoleStatements:
+    - Effect: Allow
+      Resource: ${file(resources/db.yml):Resource}
+      Action:
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:Scan
+        - dynamodb:Query
+
+plugins:
+  - serverless-webpack
+  - serverless-dynamodb-local
+  - serverless-offline
+
+custom:
+  webpackIncludeModules: true
+  stage: ${opt:stage, self:provider.stage}
+  rootDomain: iot-engineering.life
+  devDomains:
+    - dev.iot-engineering.life
+  prodDomains:
+    - www.iot-engineering.life
+    - iot-engineering.life
+  subDomains:
+    - blog.iot-engineering.life
+  devCognitoPool: 'arn:aws:cognito-idp:us-east-1:605058891820:userpool/us-east-1_46nETTnGb'
+  prodCognitoPool: 'arn:aws:cognito-idp:us-east-1:605058891820:userpool/us-east-1_gvryMnckq'
+
+functions:
+  userConfirm:
+    handler: ui-services/index.userConfirm
+  autoConfirm:
+    handler: ui-services/index.autoConfirm
+  testAuth:
+    handler: ui-services/index.testAuth
+    events:
+    - http:
+        cors: true
+        authorizer:
+          name: pool_auth
+          arn: '${self:custom.${self:custom.stage}CognitoPool}'
+        path: /test
+        method: get
+  graphql:
+    handler: ui-services/index.graphql
+    events:
+    - http:
+        cors: true
+        authorizer:
+          name: pool_auth
+          arn: '${self:custom.${self:custom.stage}CognitoPool}'
+        path: /private
+        method: post
+    - http:
+        cors: true
+        path: /public
+        method: post
+
+resources:
+
+  Outputs:
+    AppUrl:
+      Value: http://web-starter.s3-website-us-east-1.amazonaws.com
+    AppBucket:
+      Value: web-starter
+
+  Resources:
+    App:
+      Type: "AWS::S3::Bucket"
+      Properties:
+        WebsiteConfiguration:
+          IndexDocument: index.html
+          ErrorDocument: index.html
+
+    ArticlesDB: ${file(resources/db.yml):ArticlesDB}
+    CommentsDB: ${file(resources/db.yml):CommentsDB}
+
+
+
+    DnsRecords: ${file(resources/${self:custom.stage}-dns.yml)}
+    SSLCert: ${file(resources/${self:custom.stage}-ssl.yml)}
+    CDN:
+      Type: "AWS::CloudFront::Distribution"
+      Properties:
+        DistributionConfig:
+          ViewerCertificate:
+            AcmCertificateArn: {Ref: SSLCert}
+            SslSupportMethod: sni-only
+          Enabled: true
+          HttpVersion: http2
+          Aliases: ${self:custom.${self:custom.stage}Domains}
+          DefaultRootObject: index.html
+
+          Origins:
+            - DomainName: {"Fn::Join": ["", [web-starter, ".", {"Fn::FindInMap": [RegionMap, {Ref: "AWS::Region"}, websiteendpoint]}]]}
+              Id: S3Origin
+              CustomOriginConfig:
+                HTTPPort: 80
+                HTTPSPort: 443
+                OriginProtocolPolicy: http-only
+          DefaultCacheBehavior:
+            ViewerProtocolPolicy: allow-all
+            TargetOriginId: S3Origin
+            AllowedMethods:
+              - GET
+              - HEAD
+            Compress: true
+            DefaultTTL: 30
+            MinTTL: 10
+            ForwardedValues:
+              QueryString: true
+  Mappings: ${file(resources/mappings.yml)}

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>GraphiQL for App Starter</title>
+  <script src="//cdn.jsdelivr.net/es6-promise/4.0.5/es6-promise.auto.min.js"></script>
+  <script src="//cdn.jsdelivr.net/fetch/0.9.0/fetch.min.js"></script>
+  <script src="https://unpkg.com/react@latest/dist/react.js"></script>
+  <script src="https://unpkg.com/react-dom@latest/dist/react-dom.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/graphiql@0.11.3/graphiql.css" />
+  <script src="https://cdn.jsdelivr.net/npm/graphiql@0.11.3/graphiql.min.js"></script>
+  <script src="aws-cognito-sdk.min.js"></script>
+  <script src="amazon-cognito-identity.min.js"></script>
+  <link href="logo.png" rel="icon" type="image/x-icon" />
+
+    <style>
+      body {
+        height: 100%;
+        margin: 0;
+        width: 100%;
+        overflow: hidden;
+      }
+      #graphiql {
+        height: 94vh;
+      }
+      #header{
+
+        background: linear-gradient(#fff, #f6f6f6);
+        height: 6vh;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        border-bottom: #B9B9B9 1px solid;
+        font-family: Arial, Helvetica, sans-serif;
+        color: slategrey;
+      }
+
+      #loginMsg{
+        font-family: Arial, Helvetica, sans-serif;
+        color: slategrey;
+      }
+      .not-authed{
+        display: none;
+      }
+      .btn{
+        width:80px;
+        height:6vh;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        color: slategray;
+      }
+    </style>
+</head>
+<body>
+  <div id='header'>
+    <img src="logo.png"  style='height:35px;'>
+    <h2 >API Interface for App Starter</h2>
+    <button id='login'class='btn' onclick="login()" >login</button>
+    <button id='logout' class='btn not-authed' onclick="logout()" >logout</button>
+  </div>
+
+  <h1 id='loginMsg' style='padding-left:20px'>Please Login</h1>
+
+  <div class="not-authed"  id="graphiql"></div>
+
+
+
+  <script type="text/babel">
+
+    const {CognitoUserPool, CognitoUser, AuthenticationDetails} = AmazonCognitoIdentity
+
+    const pool = new CognitoUserPool({UserPoolId:'us-east-1_46nETTnGb', ClientId:'4dv7fkj8cot7u29oia8pgrl8g0'})
+    const user = new CognitoUser({ Username: 'frontend', Pool: pool })
+
+
+    const toggleCSS = () =>{
+      document.getElementById('login').classList.toggle('not-authed');
+      document.getElementById('logout').classList.toggle('not-authed');
+      document.getElementById('loginMsg').classList.toggle('not-authed');
+      document.getElementById('graphiql').classList.toggle('not-authed');
+    }
+
+    user.getSession( (err, session) => err
+      ? null
+      : (
+          localStorage.setItem('token', session.getIdToken().getJwtToken()),
+          toggleCSS()
+        )
+    )
+
+
+    const login = ()=> {
+      const password = prompt('Please enter password')
+      password
+        ? user.authenticateUser(
+            new AuthenticationDetails({ Username:'frontend', Password: password}), {
+              onSuccess: res => toggleCSS(),
+              onFailure: err => alert('Bad Password')
+            }
+          )
+        : null
+    }
+
+    const logout = ()=> {
+      user.signOut()
+      toggleCSS()
+    }
+
+
+
+
+
+    const graphQLFetcher  = graphQLParams => fetch(
+      'http://localhost:8010/private'
+      // 'https://eatrwmqn69.execute-api.us-east-1.amazonaws.com/dev/private'
+      ,{
+        method: 'post',
+        mode: 'cors',
+        body: JSON.stringify(graphQLParams),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization':localStorage.getItem('token')
+        }
+    }).then(response => response.json());
+
+
+    ReactDOM.render(
+      React.createElement(GraphiQL, {fetcher: graphQLFetcher,}),
+      document.getElementById('graphiql')
+    )
+  </script>
+</body>
+
+</html>

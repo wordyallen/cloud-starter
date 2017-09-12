@@ -1,0 +1,14 @@
+{
+  "requestContext": {
+    "authorizer": {
+      "claims": {
+        "sub": "some subject",
+        "email": "test8@mailinator.com"
+      }
+    }
+  },
+  "httpMethod" : "GET",
+  "headers":{
+    "Authorization":  "eyJraWQiOiJ3ZEFPaFhYenR0K1VibVRRQlJkMHFGT2RVYzdjQXVYUlMxQU56WDlSekRrPSIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiI5ZGRiMDA5Ni1hYjk3LTQ1YWYtODQ0Yi0wYzhkOTI5YTdlMzUiLCJhdWQiOiI0ZHY3ZmtqOGNvdDd1MjlvaWE4cGdybDhnMCIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwidG9rZW5fdXNlIjoiaWQiLCJhdXRoX3RpbWUiOjE1MDQ2NzMxMTQsImlzcyI6Imh0dHBzOlwvXC9jb2duaXRvLWlkcC51cy1lYXN0LTEuYW1hem9uYXdzLmNvbVwvdXMtZWFzdC0xXzQ2bkVUVG5HYiIsImNvZ25pdG86dXNlcm5hbWUiOiJ0ZXN0OCIsImV4cCI6MTUwNDY3NjcxNCwiaWF0IjoxNTA0NjczMTE0LCJlbWFpbCI6InRlc3Q4QG1haWxpbmF0b3IuY29tIn0.AN5t3ebGm3i-zNrdjlhz11ao3z1f6FFSFLqDTSXcYTEsZJ7n65UMBjVnxUNX-1-IrW3tS7L55eihvdBEI8S_4ddRgCqoDsF9cgi3ku-IPkg-WVWkVdFvmi1fxLHRK1OpZZ-pQ1-88lredigYkoZxlm7aKYY7c81W2Hx782pCLj8u1G8Wh8WsH9OFrILFK-RKEi806M2QGQ-MpzmWbbwy6aHYpN6PAV61wuq69MiH1_nzJUFKyiaJYfXcyW4FSx4yOJv2DtM2YHhEMm36BaKZt3FgB1VBgHbE27CWy-4_FCqXha5AD7FF83d6xcXQed5-LOxUsh3d4em23Fb3bkv8uw"
+  }
+}

@@ -1,0 +1,101 @@
+Resource:
+  - "Fn::Join":
+      - ""
+      -
+        - "arn:aws:dynamodb:"
+        - {Ref: "AWS::Region"}
+        - ":"
+        - {Ref: "AWS::AccountId"}
+        - ":table/"
+        - Ref: CommentsDB
+  - "Fn::Join":
+      - ""
+      -
+        - "arn:aws:dynamodb:"
+        - {Ref: "AWS::Region"}
+        - ":"
+        - {Ref: "AWS::AccountId"}
+        - ":table/"
+        - Ref: CommentsDB
+        - '/index/*'
+  - "Fn::Join":
+      - ""
+      -
+        - "arn:aws:dynamodb:"
+        - {Ref: "AWS::Region"}
+        - ":"
+        - {Ref: "AWS::AccountId"}
+        - ":table/"
+        - Ref: ArticlesDB
+  - "Fn::Join":
+      - ""
+      -
+        - "arn:aws:dynamodb:"
+        - {Ref: "AWS::Region"}
+        - ":"
+        - {Ref: "AWS::AccountId"}
+        - ":table/"
+        - Ref: ArticlesDB
+        - '/index/*'
+
+ArticlesDB:
+  Type: "AWS::DynamoDB::Table"
+  Properties:
+    AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      - AttributeName: author_id
+        AttributeType: S
+      - AttributeName: posted_at
+        AttributeType: N
+    KeySchema:
+      - AttributeName: id
+        KeyType: HASH
+    ProvisionedThroughput:
+      ReadCapacityUnits: 1
+      WriteCapacityUnits: 1
+    GlobalSecondaryIndexes:
+      - IndexName: author_x_posted
+        KeySchema:
+          - AttributeName: author_id
+            KeyType: HASH
+          - AttributeName: posted_at
+            KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    TableName: ${opt:stage, self:provider.stage}-cloud-starter-articles
+
+CommentsDB:
+  Type: "AWS::DynamoDB::Table"
+  Properties:
+    AttributeDefinitions:
+      - AttributeName: article_id
+        AttributeType: S
+      - AttributeName: commenter_id
+        AttributeType: S
+      - AttributeName: posted_at
+        AttributeType: N
+    KeySchema:
+      - AttributeName: article_id
+        KeyType: HASH
+      - AttributeName: posted_at
+        KeyType: RANGE
+    ProvisionedThroughput:
+      ReadCapacityUnits: 1
+      WriteCapacityUnits: 1
+    GlobalSecondaryIndexes:
+      - IndexName: commenter_x_posted
+        KeySchema:
+          - AttributeName: commenter_id
+            KeyType: HASH
+          - AttributeName: posted_at
+            KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    TableName: ${opt:stage, self:provider.stage}-cloud-starter-comments

@@ -1,0 +1,8 @@
+{
+  "body": "{\"query\":\"mutation ($title: String!, $link: String!){createArticle(article: { link: $link,  title: $title }) {  title } }\", \"variables\":{\"title\": \"A site about metal\",\"link\":\"www.metal.com\"}}",
+  "requestContext": {
+    "authorizer": {
+      "claims": "rap"
+    }
+  }
+}

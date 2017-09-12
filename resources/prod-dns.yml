@@ -1,0 +1,30 @@
+Type: "AWS::Route53::RecordSetGroup"
+Properties:
+  HostedZoneName: "${self:custom.rootDomain}."
+  Comment: "DNS records associated with IoT-Starter app"
+  RecordSets:
+
+    - Name: "${self:custom.rootDomain}"
+      Type: A
+      AliasTarget:
+        DNSName: {"Fn::GetAtt": CDN.DomainName}
+        HostedZoneId: Z2FDTNDATAQYW2
+    # www alias
+    - Name: "www.${self:custom.rootDomain}"
+      Type: A
+      AliasTarget:
+        DNSName: {"Fn::GetAtt": CDN.DomainName}
+        HostedZoneId: Z2FDTNDATAQYW2
+
+
+    - Name: "${self:custom.rootDomain}"
+      Type: AAAA
+      AliasTarget:
+        DNSName: {"Fn::GetAtt": CDN.DomainName}
+        HostedZoneId: Z2FDTNDATAQYW2
+    # www alias  
+    - Name: "www.${self:custom.rootDomain}"
+      Type: AAAA
+      AliasTarget:
+        DNSName: {"Fn::GetAtt": CDN.DomainName}
+        HostedZoneId: Z2FDTNDATAQYW2

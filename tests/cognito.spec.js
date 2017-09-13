@@ -93,29 +93,31 @@ describe('Standard Authentication Flow...', () => {
   )
 
 
-  test('Cognito Authorization against Lambda API 🔐 ',
-    () => fetch(`${API}/test`, {
-      method: 'get',
+
+  test('Cognito Authorization against GraphQL API 🔐 ', ()=>
+    fetch(`${API}/private`,{
+      method: 'post',
+      mode: 'cors',
+      body: JSON.stringify({query:'{test}'}),
       headers: {
         'Accept': 'application/json',
         'Authorization': localStorage.getItem('token')
       }
     })
-    .then(res => res.ok ? res.json() : Promise.reject(res.statusText))
-    .then(({ requestContext: { authorizer: { claims } } }) =>
-      expect(claims).toBeTruthy()
+    .then( res => res.ok ? res.json() : Promise.reject(res.statusText))
+    .then( queryResult =>
+      expect(queryResult).toEqual({ data: { test: 'hi api user 👋🏼 ' } })
     )
-    .catch(err => expect(err).toBeFalsy())
+    .catch( err => expect(err).toBeFalsy())
   )
+
 })
 
 
 
 
 
-
 describe('Misc: Changing password and Signing out...', () => {
-
 
 
   test('Change User Password 🤔 ', done =>
@@ -126,17 +128,18 @@ describe('Misc: Changing password and Signing out...', () => {
     )
   )
 
-  test('Sign User Out Globally 🌎 ', () => new Promise((resolve, reject) =>
+  test.skip('Sign User Out Globally 🌎 ', () => new Promise((resolve, reject) =>
+
     user.globalSignOut({
       onSuccess: res => resolve(res),
       onFailure: err => reject(err)
     }))
     .then(res => {
+      // localStorage.removeItem('token')
       expect(res).toEqual('SUCCESS')
     })
     .catch(err => expect(err).toBeFalsy())
   )
-
 
 
 })

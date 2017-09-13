@@ -44,16 +44,6 @@ functions:
     handler: ui-services/index.userConfirm
   autoConfirm:
     handler: ui-services/index.autoConfirm
-  testAuth:
-    handler: ui-services/index.testAuth
-    events:
-    - http:
-        cors: true
-        authorizer:
-          name: pool_auth
-          arn: '${self:custom.${self:custom.stage}CognitoPool}'
-        path: /test
-        method: get
   graphql:
     handler: ui-services/index.graphql
     events:

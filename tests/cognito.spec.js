@@ -11,7 +11,7 @@ import prompt from 'prompt'
 import fetch from 'node-fetch'
 
 const {NODE_ENV} = process.env
-const localStorage = new LocalStorage('./tests/.scratch')
+const localStorage = new LocalStorage('./tests')
 
 const {UserPoolId, ClientId, API} = process.env
 
@@ -28,26 +28,14 @@ const list =[new Attribute({Name:'email', Value: u.email})]
 const user = new User({ Username: u.username, Pool: pool })
 
 
+beforeAll(done =>
+  pool.signUp(u.username, u.password, list, null, (err, res) => err
+    ? (console.error(err), done())
+    : (console.log('New User Created ⚡️ '), done())
+  )
+)
 
-// beforeAll(done =>
-//   pool.signUp(u.username, u.password, list, null, (err, res) => err
-//     ? (console.error(err), done())
-//     : (console.log('New User Created ⚡️ '), done())
-//   )
-// )
 
-
-// afterAll(done => user.authenticateUser(
-//   new Details({ Username: u.username, Password: u.newPassword })
-//   , {
-//     onSuccess: result => user.deleteUser(
-//       (err, result) => err
-//         ? (console.error(err), done())
-//         : (console.log('User Deleted 👋🏼 '), done())
-//     ),
-//     onFailure: err => (console.error(err), done())
-//   })
-// )
 
 
   NODE_ENV==='local'
@@ -64,9 +52,9 @@ const user = new User({ Username: u.username, Pool: pool })
     }, 60000)
   : test.skip()
 
-  
 
-describe.skip('Standard Authentication Flow...', () => {
+
+describe('Standard Authentication Flow...', () => {
 
   test('Sign In and Get Token 🍪 ', () =>  new Promise((resolve, reject)=>
     user.authenticateUser(
@@ -86,7 +74,7 @@ describe.skip('Standard Authentication Flow...', () => {
       ? (console.error(err), done())
       : (
           localStorage.setItem('token', session.getIdToken().getJwtToken()),
-          expect(session.isValid()).toBeTruthy(), 
+          expect(session.isValid()).toBeTruthy(),
           done()
         )
     )
@@ -118,7 +106,7 @@ describe.skip('Standard Authentication Flow...', () => {
       expect(claims).toBeTruthy()
     )
     .catch(err => expect(err).toBeFalsy())
-  )  
+  )
 })
 
 
@@ -126,7 +114,9 @@ describe.skip('Standard Authentication Flow...', () => {
 
 
 
-describe.skip('Misc: Changing password and Signing out...', () => {
+describe('Misc: Changing password and Signing out...', () => {
+
+
 
   test('Change User Password 🤔 ', done =>
     user.changePassword(u.password, u.newPassword,
@@ -136,19 +126,30 @@ describe.skip('Misc: Changing password and Signing out...', () => {
     )
   )
 
-
   test('Sign User Out Globally 🌎 ', () => new Promise((resolve, reject) =>
     user.globalSignOut({
       onSuccess: res => resolve(res),
       onFailure: err => reject(err)
     }))
     .then(res => {
-      localStorage.removeItem('token')
       expect(res).toEqual('SUCCESS')
     })
     .catch(err => expect(err).toBeFalsy())
   )
 
+
+
 })
 
 
+afterAll(done => user.authenticateUser(
+  new Details({ Username: u.username, Password: u.newPassword })
+  , {
+    onSuccess: result => user.deleteUser(
+      (err, result) => err
+        ? (console.error(err), done())
+        : (console.log('User Deleted 👋🏼 '), done())
+    ),
+    onFailure: err => (console.error(err), done())
+  })
+)

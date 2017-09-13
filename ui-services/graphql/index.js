@@ -2,9 +2,6 @@ import {GraphQLSchema, GraphQLObjectType, GraphQLString, graphql} from 'graphql'
 import { article, articles, createArticle, paginateArticles} from './types'
 const {NODE_ENV}= process.env
 
-
-let count
-
 export class GraphQL {
 
   rootMutation = new GraphQLObjectType({

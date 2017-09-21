@@ -23,6 +23,7 @@ const ArticleType = new GraphQLObjectType({
     posted_at: {type: GraphQLInt},
     title: {type: GraphQLString},
     link: {type: GraphQLString},
+    preview: {type: GraphQLString},
     comments: {type: new GraphQLList(CommentType)},
   }
 })

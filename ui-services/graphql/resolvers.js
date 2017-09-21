@@ -5,8 +5,6 @@ const { ARTICLES_TABLE, COMMENTS_TABLE, NODE_ENV } = process.env
 import {writeFileSync, readFileSync} from 'fs'
 
 
-config.setPromisesDependency(Promise)
-
 const dbConfig = TableName =>  NODE_ENV==='local'
   ? ({
       region: 'localhost',

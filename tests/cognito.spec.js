@@ -28,12 +28,12 @@ const list =[new Attribute({Name:'email', Value: u.email})]
 const user = new User({ Username: u.username, Pool: pool })
 
 
-beforeAll(done =>
-  pool.signUp(u.username, u.password, list, null, (err, res) => err
-    ? (console.error(err), done())
-    : (console.log('New User Created ⚡️ '), done())
-  )
-)
+// beforeAll(done =>
+//   pool.signUp(u.username, u.password, list, null, (err, res) => err
+//     ? (console.error(err.code), done())
+//     : (console.log('New User Created ⚡️ '), done())
+//   )
+// )
 
 
 
@@ -54,8 +54,6 @@ beforeAll(done =>
 
 
 
-describe('Standard Authentication Flow...', () => {
-
   test('Sign In and Get Token 🍪 ', () =>  new Promise((resolve, reject)=>
     user.authenticateUser(
       new Details({ Username: u.username, Password: u.password}), {
@@ -67,92 +65,84 @@ describe('Standard Authentication Flow...', () => {
   )
 
 
-
-
-  test('Retrieve Current User from localStorage 🚶 ', done =>
-    user.getSession( (err, session) => err
-      ? (console.error(err), done())
-      : (
-          localStorage.setItem('token', session.getIdToken().getJwtToken()),
-          expect(session.isValid()).toBeTruthy(),
-          done()
-        )
-    )
-  )
-
-  test('Retrieve User Attributes 🚚  ', done =>
-    user.getUserAttributes((err, res) => err
-      ? (console.log(err), done())
-      : (
-        expect(res.filter(
-          user => user.getValue() === u.email)
-        ).toHaveLength(1),
-        done()
-      )
-    )
-  )
-
-
-
-  test('Cognito Authorization against GraphQL API 🔐 ', ()=>
-    fetch(`${API}/private`,{
-      method: 'post',
-      mode: 'cors',
-      body: JSON.stringify({query:'{test}'}),
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': localStorage.getItem('token')
-      }
-    })
-    .then( res => res.ok ? res.json() : Promise.reject(res.statusText))
-    .then( queryResult =>
-      expect(queryResult).toEqual({ data: { test: 'hi api user 👋🏼 ' } })
-    )
-    .catch( err => expect(err).toBeFalsy())
-  )
-
-})
-
-
-
-
-
-describe('Misc: Changing password and Signing out...', () => {
-
-
-  test('Change User Password 🤔 ', done =>
-    user.changePassword(u.password, u.newPassword,
-      (err, res) => err
-        ? (console.error(err), done())
-        : (expect(res).toEqual('SUCCESS'), done())
-    )
-  )
-
-  test.skip('Sign User Out Globally 🌎 ', () => new Promise((resolve, reject) =>
-
-    user.globalSignOut({
-      onSuccess: res => resolve(res),
-      onFailure: err => reject(err)
-    }))
-    .then(res => {
-      // localStorage.removeItem('token')
-      expect(res).toEqual('SUCCESS')
-    })
-    .catch(err => expect(err).toBeFalsy())
-  )
-
-
-})
-
-
-afterAll(done => user.authenticateUser(
-  new Details({ Username: u.username, Password: u.newPassword })
-  , {
-    onSuccess: result => user.deleteUser(
-      (err, result) => err
-        ? (console.error(err), done())
-        : (console.log('User Deleted 👋🏼 '), done())
-    ),
-    onFailure: err => (console.error(err), done())
-  })
-)
+// 
+//
+//   test('Retrieve Current User from localStorage 🚶 ', done =>
+//     user.getSession( (err, session) => err
+//       ? (console.error(err), done())
+//       : (
+//           localStorage.setItem('token', session.getIdToken().getJwtToken()),
+//           expect(session.isValid()).toBeTruthy(),
+//           done()
+//         )
+//     )
+//   )
+//
+//
+//   test('Retrieve User Attributes 🚚  ', done =>
+//     user.getUserAttributes((err, res) => err
+//       ? (console.log(err), done())
+//       : (
+//         expect(res.filter(
+//           user => user.getValue() === u.email)
+//         ).toHaveLength(1),
+//         done()
+//       )
+//     )
+//   )
+//
+//
+//
+// test('Cognito Authorization against GraphQL API 🔐 ', ()=>
+//     fetch(`${API}/private`,{
+//       method: 'post',
+//       mode: 'cors',
+//       body: JSON.stringify({query:'{test}'}),
+//       headers: {
+//         'Accept': 'application/json',
+//         'Authorization': localStorage.getItem('token')
+//       }
+//     })
+//     .then( res => res.ok ? res.json() : Promise.reject(res.statusText))
+//     .then( queryResult =>
+//       expect(queryResult).toEqual({ data: { test: 'hi api user 👋🏼 ' } })
+//     )
+//     .catch( err => expect(err).toBeFalsy())
+//   )
+//
+//
+//
+//
+// test('Change User Password 🤔 ', done =>
+//   user.changePassword(u.password, u.newPassword,
+//     (err, res) => err
+//       ? (console.error(err), done())
+//       : (expect(res).toEqual('SUCCESS'), done())
+//   )
+// )
+//
+//   test.skip('Sign User Out Globally 🌎 ', () => new Promise((resolve, reject) =>
+//
+//     user.globalSignOut({
+//       onSuccess: res => resolve(res),
+//       onFailure: err => reject(err)
+//     }))
+//     .then(res => {
+//       // localStorage.removeItem('token')
+//       expect(res).toEqual('SUCCESS')
+//     })
+//     .catch(err => expect(err).toBeFalsy())
+//   )
+//
+//
+// afterAll(done => user.authenticateUser(
+//   new Details({ Username: u.username, Password: u.newPassword })
+//   , {
+//     onSuccess: result => user.deleteUser(
+//       (err, result) => err
+//         ? (console.error(err), done())
+//         : (console.log('User Deleted 👋🏼 '), done())
+//     ),
+//     onFailure: err => (console.error(err), done())
+//   })
+// )

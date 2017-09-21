@@ -1,29 +1,5 @@
 service: cloud-starter
-
 frameworkVersion: ">=1.8.0 <2.0.0"
-
-provider:
-  name: aws
-  runtime: nodejs6.10
-  environment:
-    SLS_STAGE: ${opt:stage, self:provider.stage}
-    ARTICLES_TABLE: dev-cloud-starter-articles
-    COMMENTS_TABLE: dev-cloud-starter-comments
-  iamRoleStatements:
-    - Effect: Allow
-      Resource: ${file(resources/db.yml):Resource}
-      Action:
-        - dynamodb:GetItem
-        - dynamodb:PutItem
-        - dynamodb:UpdateItem
-        - dynamodb:DeleteItem
-        - dynamodb:Scan
-        - dynamodb:Query
-
-plugins:
-  - serverless-webpack
-  - serverless-dynamodb-local
-  - serverless-offline
 
 custom:
   webpackIncludeModules: true
@@ -38,6 +14,36 @@ custom:
     - blog.iot-engineering.life
   devCognitoPool: 'arn:aws:cognito-idp:us-east-1:605058891820:userpool/us-east-1_46nETTnGb'
   prodCognitoPool: 'arn:aws:cognito-idp:us-east-1:605058891820:userpool/us-east-1_gvryMnckq'
+  photoBucket: ${self:custom.stage}-app-starter-photos
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+  region: us-east-1
+  environment:
+    SLS_STAGE: ${opt:stage, self:provider.stage}
+    ARTICLES_TABLE: ${self:custom.stage}-cloud-starter-articles
+    COMMENTS_TABLE: ${self:custom.stage}-cloud-starter-comments
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:*
+      Resource: "*"
+    - Effect: Allow
+      Resource: ${file(service-configs/db.yml):Resource}
+      Action:
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:Scan
+        - dynamodb:Query
+
+plugins:
+  - serverless-webpack
+  - serverless-dynamodb-local
+  - serverless-offline
+
 
 functions:
   userConfirm:
@@ -58,15 +64,19 @@ functions:
         cors: true
         path: /public
         method: post
+  upload:
+    handler: ui-services/index.upload
+    events:
+      - s3:
+          bucket: photos
+          event: s3:ObjectCreated:*
 
 resources:
-
   Outputs:
     AppUrl:
       Value: http://web-starter.s3-website-us-east-1.amazonaws.com
     AppBucket:
       Value: web-starter
-
   Resources:
     App:
       Type: "AWS::S3::Bucket"
@@ -74,42 +84,69 @@ resources:
         WebsiteConfiguration:
           IndexDocument: index.html
           ErrorDocument: index.html
-
-    ArticlesDB: ${file(resources/db.yml):ArticlesDB}
-    CommentsDB: ${file(resources/db.yml):CommentsDB}
-
-
-
-    DnsRecords: ${file(resources/${self:custom.stage}-dns.yml)}
-    SSLCert: ${file(resources/${self:custom.stage}-ssl.yml)}
-    CDN:
-      Type: "AWS::CloudFront::Distribution"
+    S3BucketPhotos:
+      Type: AWS::S3::Bucket
       Properties:
-        DistributionConfig:
-          ViewerCertificate:
-            AcmCertificateArn: {Ref: SSLCert}
-            SslSupportMethod: sni-only
-          Enabled: true
-          HttpVersion: http2
-          Aliases: ${self:custom.${self:custom.stage}Domains}
-          DefaultRootObject: index.html
+        BucketName: ${self:custom.photoBucket}
+        AccessControl: PublicRead
+    UploadLambdaPermissionPhotosS3:
+      Type: "AWS::Lambda::Permission"
+      Properties:
+        FunctionName:
+          "Fn::GetAtt":
+            - UploadLambdaFunction
+            - Arn
+        Principal: "s3.amazonaws.com"
+        Action: "lambda:InvokeFunction"
+        SourceAccount:
+          Ref: AWS::AccountId
+        SourceArn: arn:aws:s3:::${self:custom.photoBucket}
+    S3BucketPhotosPolicy:
+      Type: "AWS::S3::BucketPolicy"
+      Properties:
+        Bucket: {Ref: S3BucketPhotos}
+        PolicyDocument:
+          Statement:
+            -
+              Action: s3:*
+              Effect: Allow
+              Resource: arn:aws:s3:::${self:custom.photoBucket}/*
+              Principal: "*"
 
-          Origins:
-            - DomainName: {"Fn::Join": ["", [web-starter, ".", {"Fn::FindInMap": [RegionMap, {Ref: "AWS::Region"}, websiteendpoint]}]]}
-              Id: S3Origin
-              CustomOriginConfig:
-                HTTPPort: 80
-                HTTPSPort: 443
-                OriginProtocolPolicy: http-only
-          DefaultCacheBehavior:
-            ViewerProtocolPolicy: allow-all
-            TargetOriginId: S3Origin
-            AllowedMethods:
-              - GET
-              - HEAD
-            Compress: true
-            DefaultTTL: 30
-            MinTTL: 10
-            ForwardedValues:
-              QueryString: true
-  Mappings: ${file(resources/mappings.yml)}
+    ArticlesDB: ${file(service-configs/db.yml):ArticlesDB}
+    CommentsDB: ${file(service-configs/db.yml):CommentsDB}
+
+
+  #   DnsRecords: ${file(service-configs/${self:custom.stage}-dns.yml)}
+  #   SSLCert: ${file(service-configs/${self:custom.stage}-ssl.yml)}
+  #   CDN:
+  #     Type: "AWS::CloudFront::Distribution"
+  #     Properties:
+  #       DistributionConfig:
+  #         ViewerCertificate:
+  #           AcmCertificateArn: {Ref: SSLCert}
+  #           SslSupportMethod: sni-only
+  #         Enabled: true
+  #         HttpVersion: http2
+  #         Aliases: ${self:custom.${self:custom.stage}Domains}
+  #         DefaultRootObject: index.html
+  #
+  #         Origins:
+  #           - DomainName: {"Fn::Join": ["", [web-starter, ".", {"Fn::FindInMap": [RegionMap, {Ref: "AWS::Region"}, websiteendpoint]}]]}
+  #             Id: S3Origin
+  #             CustomOriginConfig:
+  #               HTTPPort: 80
+  #               HTTPSPort: 443
+  #               OriginProtocolPolicy: http-only
+  #         DefaultCacheBehavior:
+  #           ViewerProtocolPolicy: allow-all
+  #           TargetOriginId: S3Origin
+  #           AllowedMethods:
+  #             - GET
+  #             - HEAD
+  #           Compress: true
+  #           DefaultTTL: 30
+  #           MinTTL: 10
+  #           ForwardedValues:
+  #             QueryString: true
+  # Mappings: ${file(service-configs/mappings.yml)}
